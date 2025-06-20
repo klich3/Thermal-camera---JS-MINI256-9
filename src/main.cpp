@@ -50,7 +50,8 @@ enum MenuState {
     WRITE_MENU,
     READWRITE_MENU,
     CURSOR_MENU,
-    PARAM_MENU  
+    PARAM_MENU,
+    PALETTE_MENU 
 };
 
 struct Command {
@@ -186,6 +187,25 @@ CursorParameterCommand cursorParamCommands[] = {
     {"Mover N píxeles derecha", 0x50, "derecha"}
 };
 
+// Comandos de paletas predefinidos
+Command paletteCommands[] = {
+    {"Paleta White Hot",    {0xF0, 0x05, 0x36, 0x78, 0x20, 0x00, 0x00, 0xCE, 0xFF}, 9},
+    {"Paleta Black Hot",    {0xF0, 0x05, 0x36, 0x78, 0x20, 0x00, 0x01, 0xCF, 0xFF}, 9},
+    {"Paleta Iron",         {0xF0, 0x05, 0x36, 0x78, 0x20, 0x00, 0x02, 0xD0, 0xFF}, 9},
+    {"Paleta Rainbow",      {0xF0, 0x05, 0x36, 0x78, 0x20, 0x00, 0x03, 0xD1, 0xFF}, 9},
+    {"Paleta Rain",         {0xF0, 0x05, 0x36, 0x78, 0x20, 0x00, 0x04, 0xD2, 0xFF}, 9},
+    {"Paleta Ice Fire",     {0xF0, 0x05, 0x36, 0x78, 0x20, 0x00, 0x05, 0xD3, 0xFF}, 9},
+    {"Paleta Fusion",       {0xF0, 0x05, 0x36, 0x78, 0x20, 0x00, 0x06, 0xD4, 0xFF}, 9},
+    {"Paleta Sepia",        {0xF0, 0x05, 0x36, 0x78, 0x20, 0x00, 0x07, 0xD5, 0xFF}, 9},
+    {"Paleta Color1",       {0xF0, 0x05, 0x36, 0x78, 0x20, 0x00, 0x08, 0xD6, 0xFF}, 9},
+    {"Paleta Color2",       {0xF0, 0x05, 0x36, 0x78, 0x20, 0x00, 0x09, 0xD7, 0xFF}, 9},
+    {"Paleta Color3",       {0xF0, 0x05, 0x36, 0x78, 0x20, 0x00, 0x0A, 0xD8, 0xFF}, 9},
+    {"Paleta Color4",       {0xF0, 0x05, 0x36, 0x78, 0x20, 0x00, 0x0B, 0xD9, 0xFF}, 9},
+    {"Paleta Color5",       {0xF0, 0x05, 0x36, 0x78, 0x20, 0x00, 0x0C, 0xDA, 0xFF}, 9},
+    {"Paleta Color6",       {0xF0, 0x05, 0x36, 0x78, 0x20, 0x00, 0x0D, 0xDB, 0xFF}, 9},
+    {"Paleta Color7",       {0xF0, 0x05, 0x36, 0x78, 0x20, 0x00, 0x0E, 0xDC, 0xFF}, 9}
+};
+
 // Tamaños de arrays
 const int readCommandsSize = sizeof(readCommands) / sizeof(readCommands[0]);
 const int writeCommandsSize = sizeof(writeCommands) / sizeof(writeCommands[0]);
@@ -193,6 +213,7 @@ const int readWriteCommandsSize = sizeof(readWriteCommands) / sizeof(readWriteCo
 const int cursorCommandsSize = sizeof(cursorCommands) / sizeof(cursorCommands[0]);
 const int paramCommandsSize = sizeof(paramCommands) / sizeof(paramCommands[0]);
 const int cursorParamCommandsSize = sizeof(cursorParamCommands) / sizeof(cursorParamCommands[0]);
+const int paletteCommandsSize = sizeof(paletteCommands) / sizeof(paletteCommands[0]);
 
 // ============================================================================
 // DECLARACIONES DE FUNCIONES
@@ -229,11 +250,7 @@ void solicitarParametro(int commandIndex);
 void leerParametroActual(int commandIndex);
 void solicitarParametroCursor(int commandIndex);
 
-void mostrarPaletas();
-void seleccionarPaleta();
-void procesarSeleccionPaleta(String input);
-
-bool waitingForPalette = false;
+void mostrarComandosPaletas();
 
 // ============================================================================
 // IMPLEMENTACIÓN DE FUNCIONES DE PROTOCOLO
@@ -304,74 +321,6 @@ void sendDynamicCommand(uint8_t device, uint8_t cls, uint8_t subcls, uint8_t rw,
     inicializarRespuesta();
     SerialDevice.write(cmdBuffer, totalLen); 
     Serial.println("Comando enviado por UART2");
-}
-
-// ============================================================================
-// PALETAS DE COLORES
-// ============================================================================
-
-void mostrarPaletas() {
-    Serial.println("\n=== SELECCIONAR PALETA DE COLORES ===");
-    Serial.println("1  - White Hot (Blanco caliente) - Default");
-    Serial.println("2  - Black Hot (Negro caliente)");
-    Serial.println("3  - Iron (Estilo hierro fundido)");
-    Serial.println("4  - Rainbow (Arco iris)");
-    Serial.println("5  - Rain (Gradientes azul-verde)");
-    Serial.println("6  - Ice Fire (Hielo-fuego)");
-    Serial.println("7  - Fusion (Fusión de color)");
-    Serial.println("8  - Sepia (Tono marrón clásico)");
-    Serial.println("9  - Color1 (Paleta de usuario 1)");
-    Serial.println("10 - Color2 (Paleta de usuario 2)");
-    Serial.println("11 - Color3 (Paleta de usuario 3)");
-    Serial.println("12 - Color4 (Paleta de usuario 4)");
-    Serial.println("13 - Color5 (Paleta de usuario 5)");
-    Serial.println("14 - Color6 (Paleta de usuario 6)");
-    Serial.println("15 - Color7 (Paleta de usuario 7)");
-    Serial.println("0  - Volver al menú principal");
-    Serial.println("\nIngrese número de paleta (1-15):");
-}
-
-void seleccionarPaleta() {
-    waitingForPalette = true;
-    mostrarPaletas();
-}
-
-void procesarSeleccionPaleta(String input) {
-    input.trim();
-    int paleta = input.toInt();
-    
-    if (paleta == 0) {
-        // Volver al menú principal
-        waitingForPalette = false;
-        mostrarMenu();
-        return;
-    }
-    
-    if (paleta < 1 || paleta > 15) {
-        Serial.println("Error: Seleccione un número entre 1 y 15");
-        Serial.println("Ingrese número de paleta (1-15) o 0 para volver:");
-        return;
-    }
-    
-    // Convertir número de menú (1-15) a valor hex (0x00-0x0E)
-    uint8_t valorHex = paleta - 1;
-    
-    // Nombres de paletas para mostrar confirmación
-    const char* nombresPaletas[] = {
-        "White Hot", "Black Hot", "Iron", "Rainbow", "Rain", 
-        "Ice Fire", "Fusion", "Sepia", "Color1", "Color2", 
-        "Color3", "Color4", "Color5", "Color6", "Color7"
-    };
-    
-    uint8_t data[1] = {valorHex};
-    String commandName = "Paleta: " + String(nombresPaletas[valorHex]) + " (0x" + String(valorHex, HEX) + ")";
-    
-    sendDynamicCommand(0x36, 0x78, 0x20, 0x00, data, 1, commandName);
-    
-    waitingForPalette = false;
-    
-    Serial.println("\n¿Desea seleccionar otra paleta? (S/N)");
-    Serial.println("O presione 'M' para volver al menú principal");
 }
 
 // ============================================================================
@@ -748,11 +697,21 @@ void mostrarMenu() {
     Serial.println("X - Comandos Lectura/Escritura (fijos)");
     Serial.println("P - Comandos con Parámetros");
     Serial.println("C - Comandos de Cursor");
-    Serial.println("PAL - Seleccionar Paleta de Colores");  // NUEVA LÍNEA
+    Serial.println("L - Paletas de Colores");
     Serial.println("D - Comando dinámico (ejemplo)");
     Serial.println("M - Mostrar este menú");
     Serial.println("========================");
     Serial.println("Ingrese su opción:");
+}
+
+void mostrarComandosPaletas() {
+    currentMenu = PALETTE_MENU;
+    Serial.println("\n=== PALETAS DE COLORES ===");
+    for (int i = 0; i < paletteCommandsSize; i++) {
+        Serial.printf("%d - %s\n", i + 1, paletteCommands[i].name);
+    }
+    Serial.println("0 - Volver al menú principal");
+    Serial.println("Ingrese número de paleta:");
 }
 
 void mostrarComandosLectura() {
@@ -858,10 +817,8 @@ void ejecutarComandoNumerico(int numeroComando) {
             
         case PARAM_MENU:
             if (index >= 0 && index < paramCommandsSize) {
-                // ESCRIBIR PARÁMETRO - DIRECTAMENTE SOLICITAR EL VALOR
                 solicitarParametro(index);
             } else if (numeroComando >= 11 && numeroComando <= (10 + paramCommandsSize)) {
-                // LEER PARÁMETRO - Opciones 11-19 para leer (numeroComando 11-19)
                 int readIndex = numeroComando - 11;
                 leerParametroActual(readIndex);
             } else {
@@ -880,32 +837,24 @@ void ejecutarComandoNumerico(int numeroComando) {
             }
             break;
             
+        // AGREGAR NUEVO CASO:
+        case PALETTE_MENU:
+            if (index >= 0 && index < paletteCommandsSize) {
+                sendCommand(paletteCommands[index].data, paletteCommands[index].length, paletteCommands[index].name);
+            } else {
+                Serial.println("Número de comando inválido");
+            }
+            break;
+            
         default:
             Serial.println("Error: menú no reconocido");
             break;
     }
 }
 
-
 void procesarComando(String comando) {
     comando.trim();
     comando.toUpperCase();
-    
-    // Procesar selección de paleta pendiente
-    if (waitingForPalette) {
-        // Permitir comandos especiales durante selección de paleta
-        if (comando == "S" || comando == "SI") {
-            mostrarPaletas();
-            return;
-        } else if (comando == "N" || comando == "NO" || comando == "M") {
-            waitingForPalette = false;
-            mostrarMenu();
-            return;
-        } else {
-            procesarSeleccionPaleta(comando);
-            return;
-        }
-    }
     
     // Procesar parámetros pendientes
     if (waitingForCursorParameter) {
@@ -934,8 +883,8 @@ void procesarComando(String comando) {
     else if (comando == "C") {
         mostrarComandosCursor();
     }
-    else if (comando == "PAL" || comando == "PALETA") {  // NUEVO COMANDO
-        seleccionarPaleta();
+    else if (comando == "L" || comando == "PALETA") { 
+        mostrarComandosPaletas();
     }
     else if (comando == "D") {
         Serial.println("Ejemplo: Enviando brillo 50 con checksum automático");
@@ -953,7 +902,6 @@ void procesarComando(String comando) {
         mostrarMenu();
         waitingForParameter = false;
         waitingForCursorParameter = false;
-        waitingForPalette = false;  // AGREGAR ESTA LÍNEA
         selectedParamCommand = -1;
         selectedCursorCommand = -1;
     }
