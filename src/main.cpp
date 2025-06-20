@@ -368,6 +368,41 @@ void interpretarRespuesta(uint8_t* resp, size_t size) {
     Serial.printf("📋 Estructura: H=0x%02X L=0x%02X D=0x%02X C=0x%02X S=0x%02X R=0x%02X DL=0x%02X\n", 
                   header, length, device, classByte, subClassByte, rwFlag, dataLength);
 
+    // Imprimir respuesta completa en hexadecimal
+    Serial.print("🔍 Respuesta completa (hex): ");
+    for (size_t i = 0; i < size; i++) {
+        //Serial.print("0x");
+        if (resp[i] < 0x10) Serial.print("0");
+        Serial.print(resp[i], HEX);
+        Serial.print(" ");
+    }
+    Serial.println();
+    Serial.print("🔍 Respuesta completa (bin): ");
+    for (size_t i = 0; i < size; i++) {
+        //Serial.print("0x");
+        //if (resp[i] < 0x10) Serial.print("0");
+        Serial.print(resp[i], BIN);
+        Serial.print(" ");
+    }
+    Serial.println();
+
+     Serial.print("🔍 Respuesta completa (dec): ");
+    for (size_t i = 0; i < size; i++) {
+        //Serial.print("0x");
+        //if (resp[i] < 0x10) Serial.print("0");
+        Serial.print(resp[i], DEC);
+        Serial.print(" ");
+    }
+    Serial.println();
+
+     Serial.print("🔍 Respuesta completa (oct): ");
+    for (size_t i = 0; i < size; i++) {
+        //Serial.print("0x");
+        //if (resp[i] < 0x10) Serial.print("0");
+        Serial.print(resp[i], OCT);
+        Serial.print(" ");
+    }
+    Serial.println();
 
     // COMANDOS DE LECTURA DE INFORMACIÓN (Clase 0x74)
     if (classByte == 0x74) {
