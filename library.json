@@ -1,0 +1,46 @@
+{
+	"name": "ThermalCameraController",
+	"version": "1.0.1",
+	"description": "Plugin para controlar cámaras térmicas JS-MINI256-9 con ESP32 via UART",
+	"keywords": [
+		"camera",
+		"thermal",
+		"ESP32",
+		"UART",
+		"JS-MINI256-9",
+		"infrared",
+		"FPV",
+		"sychev"
+	],
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/klich3/Thermal-camera---JS-MINI256-9.git"
+	},
+	"authors": [
+		{
+			"name": "Anton Sychev",
+			"email": "anton@sychev.xyz",
+			"maintainer": true
+		}
+	],
+	"license": "MIT",
+	"homepage": "https://github.com/klich3/Thermal-camera---JS-MINI256-9",
+	"dependencies": {},
+	"frameworks": "arduino",
+	"platforms": ["espressif32"],
+	"examples": [
+		{
+			"name": "BasicUsage",
+			"base": "examples/BasicUsage",
+			"files": ["BasicUsage.ino"]
+		},
+		{
+			"name": "MenuInterface",
+			"base": "examples/MenuInterface",
+			"files": ["MenuInterface.ino"]
+		}
+	],
+	"export": {
+		"include": ["include/*", "src/*", "examples/*", "README.md", "library.json"]
+	}
+}
