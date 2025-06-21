@@ -64,15 +64,37 @@ ESP32-based FPV thermal camera controller for JS-MINI256-9 cameras.
 ### Interactive Menu System
 The controller provides a comprehensive menu-driven interface accessible via Serial Monitor:
 
-#### Main Menu Options
-- **R** - Read Commands (Camera information and status)
-- **W** - Write Commands (Configuration and calibration)
-- **X** - Read/Write Commands (Preset configurations)
-- **P** - Parametric Commands (Adjustable values)
-- **C** - Cursor Commands (Cursor control and dead pixel management)
-- **L** - Color Palette Commands (15 thermal palettes)
-- **D** - Dynamic Command Example
-- **M** - Show main menu
+<details>
+<summary>#### Opciones del Menú Principal</summary>
+
+- **1** - Información del Dispositivo: Leer modelo, versiones y estado del dispositivo.
+- **2** - Configuración de Imagen: Ajustar brillo, contraste y mejoras de imagen.
+- **3** - Control de Cámara: Calibración, correcciones y control del obturador.
+- **4** - Control del Cursor: Mostrar, mover y gestionar píxeles muertos.
+- **5** - Paletas de Colores: Seleccionar paletas térmicas.
+- **6** - Configuración del Sistema: Guardar, restaurar y probar la conexión.
+
+</details>
+
+<details>
+<summary>### Ejemplo de Navegación por el Menú</summary>
+
+#### Cambiar Paleta de Colores
+```
+M          # Mostrar menú principal
+5          # Entrar al menú de paletas de colores
+4          # Seleccionar la paleta Rainbow
+```
+
+#### Ajustar Configuración de Imagen
+```
+M          # Mostrar menú principal
+2          # Entrar al menú de configuración de imagen
+1          # Seleccionar control de brillo
+75         # Configurar brillo al 75%
+```
+
+</details>
 
 ### Available Commands
 
@@ -158,42 +180,91 @@ The controller automatically interprets all camera responses with human-readable
 4. Type **'M'** to show main menu
 5. Navigate menus using number keys
 
-#### Change Thermal Palette
-```
-M          # Show main menu
-L          # Enter palette menu
-4          # Select Rainbow palette
+<details>
+<summary>## Ejemplos de Uso del CameraController</summary>
+
+### Inicialización del Controlador
+```cpp
+#include "CameraController.h"
+
+HardwareSerial cameraSerial(2);
+CameraController camera(&cameraSerial, 16, 17);
+
+void setup() {
+    Serial.begin(115200);
+    camera.enableDebug(true);
+    camera.setTimeouts(150, 75);
+
+    if (!camera.begin()) {
+        Serial.println("Error al inicializar el controlador de la cámara");
+        Serial.println("Error: " + camera.getLastError());
+        while (true) {
+            delay(500);
+        }
+    }
+    Serial.println("Controlador de cámara inicializado correctamente");
+}
 ```
 
-#### Adjust Image Settings
-```
-M          # Show main menu
-P          # Enter parametric menu
-3          # Select brightness control
-75         # Set brightness to 75%
+### Configuración de Brillo y Contraste
+```cpp
+void configureImageSettings() {
+    if (camera.setBrightness(80)) {
+        Serial.println("Brillo configurado a 80");
+    } else {
+        Serial.println("Error al configurar el brillo: " + camera.getLastError());
+    }
+
+    if (camera.setContrast(60)) {
+        Serial.println("Contraste configurado a 60");
+    } else {
+        Serial.println("Error al configurar el contraste: " + camera.getLastError());
+    }
+}
 ```
 
-#### Read Camera Information
+### Selección de Paleta de Colores
+```cpp
+void changeColorPalette() {
+    if (camera.setPalette(PALETTE_RAINBOW)) {
+        Serial.println("Paleta de colores cambiada a Rainbow");
+    } else {
+        Serial.println("Error al cambiar la paleta de colores: " + camera.getLastError());
+    }
+}
 ```
-M          # Show main menu
-R          # Enter read menu
-1          # Read module model
+
+### Lectura de Información del Dispositivo
+```cpp
+void readDeviceInfo() {
+    CameraInfo info;
+    if (camera.getDeviceInfo(info)) {
+        Serial.println("Modelo: " + info.model);
+        Serial.println("Versión FPGA: " + info.fpgaVersion);
+        Serial.println("Fecha de compilación FPGA: " + info.fpgaBuildDate);
+        Serial.println("Versión de software: " + info.softwareVersion);
+        Serial.println("Fecha de compilación de software: " + info.softwareBuildDate);
+        Serial.println("Versión de calibración: " + info.calibrationVersion);
+        Serial.println("Versión ISP: " + info.ispVersion);
+        Serial.println("Estado: " + String(info.status));
+    } else {
+        Serial.println("Error al leer la información del dispositivo: " + camera.getLastError());
+    }
+}
 ```
 
-### Advanced Features
+### Ejecución de Corrección de Fondo
+```cpp
+void performBackgroundCorrection() {
+    if (camera.performBackgroundCorrection()) {
+        Serial.println("Corrección de fondo ejecutada correctamente");
+    } else {
+        Serial.println("Error al ejecutar la corrección de fondo: " + camera.getLastError());
+    }
+}
+```
 
-#### Dynamic Command Generation
-The controller includes dynamic command generation for parametric values:
-- Automatic checksum calculation
-- Parameter validation
-- Multi-byte parameter support
-- Real-time command building
-
-#### Response Analysis
-- Hex dump of raw responses
-- Structured field interpretation
-- Human-readable status messages
-- Error detection and reporting
+</details>
 
 ## Applications
 - FPV (First Person View) systems
